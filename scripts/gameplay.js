@@ -28,8 +28,10 @@ MyGame.screens['game-play'] = (function(game, input, renderer, objects, graphics
     }
 
     // GAME LOOP STUFF ----------------------
+
+    // Shooter
     let shooter = objects.Shooter({
-        size: { x: 70, y: 50, },       // Size in pixels
+        size: { x: 32, y: 16, },       // Size in pixels
         center: { x: 250, y: 250 },
         rotation: 0,
         moveRate: 200 / 1000,         // Pixels per second
@@ -37,19 +39,55 @@ MyGame.screens['game-play'] = (function(game, input, renderer, objects, graphics
     });
  
     let shooterRender = renderer.AnimatedModel({
-        spriteSheet: 'sprites/singlesquare.png',
-        spriteCount: 10,
-        spriteTime: [0, 750, 0, 0, 0, 0, 0, 0, 0, 0, ],   // ms per frame
+        spriteSheet: 'sprites/shooter.png',
+        spriteCount: 1,
+        spriteTime: [25],   // ms per frame
+    }, graphics);
+    
+    // centipede
+    let centipedeHead = objects.Shooter({
+        size: { x: 32, y: 16, },       // Size in pixels
+        center: { x: 100, y: 100 },
+        rotation: 0,
+        moveRate: 200 / 1000,         // Pixels per second
+        rotateRate: Math.PI / 1000    // Radians per second
+    });
+
+    let centipede = objects.Shooter({
+        size: { x: 32, y: 16, },       // Size in pixels
+        center: { x: 130, y: 100 },
+        rotation: 0,
+        moveRate: 200 / 1000,         // Pixels per second
+        rotateRate: Math.PI / 1000    // Radians per second
+    });
+ 
+    let centipedeHeadRender = renderer.AnimatedModel({
+        spriteSheet: 'sprites/head.png',
+        spriteCount: 8,
+        spriteTime: [50, 50, 50, 50, 50, 50, 50, 50],   // ms per frame
+    }, graphics);
+
+
+ 
+    let centipedeBodyRender = renderer.AnimatedModel({
+        spriteSheet: 'sprites/body.png',
+        spriteCount: 8,
+        spriteTime: [50, 50, 50, 50, 50, 50, 50, 50],   // ms per frame
     }, graphics);
 
     function update(elapsedTime) {
         shooterRender.update(elapsedTime);
+        centipedeHeadRender.update(elapsedTime);
+        centipedeBodyRender.update(elapsedTime);
     }
 
     function render() {
         graphics.clear();
 
         shooterRender.render(shooter);
+        centipedeHeadRender.render(centipedeHead);
+        centipedeBodyRender.render(centipede);
+
     }
 
     function gameLoop(time) {

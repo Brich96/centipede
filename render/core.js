@@ -63,7 +63,7 @@ MyGame.graphics = (function() {
         context.drawImage(
             image,
             subTextureWidth * index, 0,      // Which sub-texture to pick out
-            subTextureWidth, image.height / 13,   // The size of the sub-texture
+            subTextureWidth, image.height,   // The size of the sub-texture
             center.x - size.x / 2,           // Where to draw the sub-texture
             center.y - size.y / 2,
             size.x, size.y);
