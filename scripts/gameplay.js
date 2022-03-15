@@ -1,4 +1,4 @@
-MyGame.screens['game-play'] = (function(game, input, renderer, objects, graphics) {
+MyGame.screens['game-play'] = (function(game, input, renderer, objects, graphics, settings) {
     'use strict';
 
     let myKeyboard = input.Keyboard();
@@ -18,25 +18,33 @@ MyGame.screens['game-play'] = (function(game, input, renderer, objects, graphics
         myKeyboard.register('a', shooter.moveLeft);
         myKeyboard.register('d', shooter.moveRight);
 
-        myKeyboard.register(' ', function() {
-            if (timeSinceLastFire > shooter.fireRate) {
-                let bolt = objects.Bolt({
-                    size: { x: 6, y: 14, },       // Size in pixels
-                    center: { x: shooter.center.x, y: shooter.center.y, },
-                    rotation: 0,
-                    moveRate: 5000 / 1000,         // Pixels per second
-                    rotateRate: Math.PI / 1000
-                });
-                bullets.push(bolt);
-                timeSinceLastFire = 0;
-            }
-        });
+        myKeyboard.register(' ', makeBolt);
 
     }
 
     function run() {
+        myKeyboard.register(settings[0], shooter.moveUp);
+        myKeyboard.register(settings[1], shooter.moveDown);
+        myKeyboard.register(settings[2], shooter.moveLeft);
+        myKeyboard.register(settings[3], shooter.moveRight);
+        myKeyboard.register(settings[4], makeBolt);
+
         cancelNextRequest = false;
         requestAnimationFrame(gameLoop);
+    }
+
+    function makeBolt() {
+        if (timeSinceLastFire > shooter.fireRate) {
+            let bolt = objects.Bolt({
+                size: { x: 6, y: 14, },       // Size in pixels
+                center: { x: shooter.center.x, y: shooter.center.y, },
+                rotation: 0,
+                moveRate: 5000 / 1000,         // Pixels per second
+                rotateRate: Math.PI / 1000
+            });
+            bullets.push(bolt);
+            timeSinceLastFire = 0;
+        }
     }
 
     function processInput(elapsedTime) {
@@ -153,4 +161,4 @@ MyGame.screens['game-play'] = (function(game, input, renderer, objects, graphics
         run: run
     }
 
-}(MyGame.game, MyGame.input, MyGame.render, MyGame.objects, MyGame.graphics));
+}(MyGame.game, MyGame.input, MyGame.render, MyGame.objects, MyGame.graphics, MyGame.settings));

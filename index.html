@@ -56,11 +56,15 @@
                 <div class="card mt-5 mx-auto" style="width: 40rem;">
                     <div class="card-body">
                         <h1 class="card-title mb-4">Centipede</h1>
-
                         <h3>Set keyboard inputs</h3>
-                        <div class="btn-group-vertical">
+
+                        UP: <input type="text" id="up-input"></input> <br>
+                        DOWN: <input type="text" id="down-input"></input> <br>
+                        LEFT: <input type="text" id="left-input"></input> <br>
+                        RIGHT: <input type="text" id="right-input"></input> <br>
+                        SHOOT: <input type="text" id="shoot-input"></input> <br>
+                        <button type="button" class="btn btn-primary" id="id-settings-save">Save</button>
                             <button type="button" class="btn btn-primary" id="id-settings-back">Back</button>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -74,7 +78,8 @@
         screens: {},
         input: {},
         objects: {},
-        render: []
+        render: [],
+        settings: []
     };
 </script>
 <!-- JavaScript Bundle with Popper -->

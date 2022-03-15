@@ -12,6 +12,7 @@ MyGame.screens['main-menu'] = (function(game) {
         document.getElementById('id-settings').addEventListener('click', function() {
             game.showScreen('settings');
         });
+
     }
 
     function run() {
