@@ -110,13 +110,11 @@ MyGame.screens['game-play'] = (function(game, input, renderer, objects, graphics
 
         for (let i = 0; i < bullets.length; i++) {
             if(bullets[i].center.y <= 0) {
-                console.log('remove bullet');
                 bullets.splice(i, 1);
             } else{
                 bullets[i].moveUp(elapsedTime);
             }
         }
-        // console.log(bullets);
     }
 
     // RENDER STUFF -----------------------------------------
