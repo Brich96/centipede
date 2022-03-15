@@ -13,11 +13,10 @@ MyGame.screens['game-play'] = (function(game, input, renderer, objects, graphics
             game.showScreen('main-menu');
         });
 
-        myKeyboard.register('w', shooter.moveUp);
-        myKeyboard.register('s', shooter.moveDown);
-        myKeyboard.register('a', shooter.moveLeft);
-        myKeyboard.register('d', shooter.moveRight);
-
+        myKeyboard.register('ArrowUp', shooter.moveUp);
+        myKeyboard.register('ArrowDown', shooter.moveDown);
+        myKeyboard.register('ArrowLeft', shooter.moveLeft);
+        myKeyboard.register('ArrowRight', shooter.moveRight);
         myKeyboard.register(' ', makeBolt);
 
     }
