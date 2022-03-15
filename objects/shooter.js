@@ -38,6 +38,7 @@ MyGame.objects.Shooter = function(spec) {
         get size() { return spec.size; },
         get center() { return spec.center; },
         get rotation() { return spec.rotation; },
+        get fireRate() { return spec.fireRate; },
         moveUp: moveUp,
         moveDown: moveDown,
         moveLeft: moveLeft,
