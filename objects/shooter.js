@@ -1,15 +1,10 @@
 //------------------------------------------------------------------
 //
-// Creates a Bird model based upon the passed in specification.
+// Creates a Shooter model based upon the passed in specification.
 //
 //------------------------------------------------------------------
 MyGame.objects.Shooter = function(spec) {
 
-    //------------------------------------------------------------------
-    //
-    // Move in the direction of the rotation.
-    //
-    //------------------------------------------------------------------
     function moveUp(elapsedTime) {
         spec.center.y -= (spec.moveRate * elapsedTime);
     }

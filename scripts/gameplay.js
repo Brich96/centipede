@@ -28,6 +28,32 @@ MyGame.screens['game-play'] = (function(game, input, renderer, objects, graphics
         myKeyboard.register(settings[3], shooter.moveRight);
         myKeyboard.register(settings[4], makeBolt);
 
+        let centipedeHead = objects.Centipede({
+            type: 1,
+            direction: 'Left',
+            oldDirection: '',
+            size: { x: 18, y: 16, },       // Size in pixels
+            center: { x: graphics.canvasWidth / 2, y: 200 },
+            rotation: 0,
+            moveRate: 1500 / 1000,         // Pixels per second
+            rotateRate: Math.PI / 1000    // Radians per second
+        });
+        centipedeBody.push(centipedeHead);
+
+        for (let i = 1; i < 13; i++) {
+            let centipede = objects.Centipede({
+                type: 0,
+                direction: 'Left',
+                oldDirection: '',
+                size: { x: 18, y: 16, },       // Size in pixels
+                center: { x: (graphics.canvasWidth / 2) + (15 * i), y: 200 },
+                rotation: 0,
+                moveRate: 1500 / 1000,         // Pixels per second
+                rotateRate: Math.PI / 1000    // Radians per second
+            });
+            centipedeBody.push(centipede);
+        }
+
         cancelNextRequest = false;
         requestAnimationFrame(gameLoop);
     }
@@ -35,8 +61,8 @@ MyGame.screens['game-play'] = (function(game, input, renderer, objects, graphics
     function makeBolt() {
         if (timeSinceLastFire > shooter.fireRate) {
             let bolt = objects.Bolt({
-                size: { x: 6, y: 14, },       // Size in pixels
-                center: { x: shooter.center.x, y: shooter.center.y, },
+                size: { x: 2, y: 14, },       // Size in pixels
+                center: { x: shooter.center.x, y: shooter.center.y - 7, },
                 rotation: 0,
                 moveRate: 5000 / 1000,         // Pixels per second
                 rotateRate: Math.PI / 1000
@@ -53,6 +79,7 @@ MyGame.screens['game-play'] = (function(game, input, renderer, objects, graphics
     // GAME LOOP STUFF ----------------------
 
     let bullets = [];
+    let centipedeBody = []
     // Bullet
     let boltRender = renderer.AnimatedModel({
         spriteSheet: 'sprites/bolt.png',
@@ -66,8 +93,8 @@ MyGame.screens['game-play'] = (function(game, input, renderer, objects, graphics
         size: { x: 32, y: 16, },       // Size in pixels
         center: { x: 250, y: 250 },
         rotation: 0,
-        fireRate: 200,
-        moveRate: 200 / 1000,         // Pixels per second
+        fireRate: 150,
+        moveRate: 350 / 1000,         // Pixels per second
         rotateRate: Math.PI / 1000    // Radians per second
     });
  
@@ -78,40 +105,27 @@ MyGame.screens['game-play'] = (function(game, input, renderer, objects, graphics
     }, graphics);
     
     // centipede ----------------------------------------------
-    let centipedeHead = objects.Shooter({
-        size: { x: 22, y: 20, },       // Size in pixels
-        center: { x: 100, y: 100 },
-        rotation: 0,
-        moveRate: 200 / 1000,         // Pixels per second
-        rotateRate: Math.PI / 1000    // Radians per second
-    });
-
-    let centipede = objects.Shooter({
-        size: { x: 22, y: 20, },       // Size in pixels
-        center: { x: 120, y: 100 },
-        rotation: 0,
-        moveRate: 200 / 1000,         // Pixels per second
-        rotateRate: Math.PI / 1000    // Radians per second
-    });
- 
     let centipedeHeadRender = renderer.AnimatedModel({
-        spriteSheet: 'sprites/head.png',
+        spriteSheet: 'sprites/headclear.png',
         spriteCount: 8,
         spriteTime: [25, 25, 25, 25, 25, 25, 25, 25],   // ms per frame
     }, graphics);
  
     let centipedeBodyRender = renderer.AnimatedModel({
-        spriteSheet: 'sprites/body.png',
+        spriteSheet: 'sprites/bodyclear.png',
         spriteCount: 8,
         spriteTime: [25, 25, 25, 25, 25, 25, 25, 25],   // ms per frame
     }, graphics);
 
     // UPDATE STUFF ----------------------------------------------
+    let holdCenterY = 0;
 
     function update(elapsedTime) {
         shooterRender.update(elapsedTime);
         centipedeHeadRender.update(elapsedTime);
         centipedeBodyRender.update(elapsedTime);
+
+        updateCentipede();
 
         timeSinceLastFire += elapsedTime;
 
@@ -124,16 +138,54 @@ MyGame.screens['game-play'] = (function(game, input, renderer, objects, graphics
         }
     }
 
+    function updateCentipede() {
+        for (let i = 0; i < centipedeBody.length; i++) {
+            if(centipedeBody[i].direction == 'Left') { 
+                if(centipedeBody[i].center.x < 15) { // Needs to be updated to hitting anything, not just canvas walls
+                    centipedeBody[i].oldDirection = 'Left';
+                    centipedeBody[i].direction = 'Down';
+                    holdCenterY = centipedeBody[i].center.y;
+                } else {
+                    centipedeBody[i].moveLeft();
+                }
+            } else if(centipedeBody[i].direction == 'Right') {
+                if(centipedeBody[i].center.x > graphics.canvasWidth - 15) {  // Needs to be updated to hitting anything, not just canvas walls
+                    centipedeBody[i].oldDirection = 'Right';
+                    centipedeBody[i].direction = 'Down';
+                    holdCenterY = centipedeBody[i].center.y;
+                } else {
+                    centipedeBody[i].moveRight();
+                }
+            } else if (centipedeBody[i].direction == 'Up') {
+                centipedeBody[i].moveUp();
+            } else if (centipedeBody[i].direction == 'Down') {
+                if(Math.abs(holdCenterY - centipedeBody[i].center.y) > 17) {
+                    if(centipedeBody[i].oldDirection == 'Left') {
+                        centipedeBody[i].direction = 'Right';
+                    } else if(centipedeBody[i].oldDirection == 'Right') {
+                        centipedeBody[i].direction = 'Left';
+                    }
+                } else {
+                    centipedeBody[i].moveDown();
+                }
+            }
+        }
+    }
+
     // RENDER STUFF -----------------------------------------
 
     function render() {
         graphics.clear();
 
         shooterRender.render(shooter);
-        centipedeHeadRender.render(centipedeHead);
-        centipedeBodyRender.render(centipede);
 
-
+        for (let i = 0; i < centipedeBody.length; i++) {
+            if(centipedeBody[i].type == 1) {
+                centipedeHeadRender.render(centipedeBody[i]);
+            } else {
+                centipedeBodyRender.render(centipedeBody[i]);
+            }
+        }
 
         for (let i = 0; i < bullets.length; i++) {
             boltRender.render(bullets[i]);

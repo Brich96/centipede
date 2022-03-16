@@ -1,15 +1,11 @@
 //------------------------------------------------------------------
 //
-// Creates a Bird model based upon the passed in specification.
+// Creates a Bolt model based upon the passed in specification.
 //
 //------------------------------------------------------------------
 MyGame.objects.Bolt = function(spec) {
 
-    //------------------------------------------------------------------
-    //
-    // Move in the direction of the rotation.
-    //
-    //------------------------------------------------------------------
+
     function moveUp(elapsedTime) {
         spec.center.y -= (spec.moveRate);
     }

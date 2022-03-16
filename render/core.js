@@ -53,7 +53,7 @@ MyGame.graphics = (function() {
         context.save();
 
         context.translate(center.x, center.y);
-        context.rotate(rotation);
+        context.rotate(rotation * Math.PI / 180);
         context.translate(-center.x, -center.y);
 
         //
@@ -94,21 +94,13 @@ MyGame.graphics = (function() {
         context.restore();
     }
 
-    function getCanvasWidth() {
-        return canvas.width;
-    }
-
-    function getCanvasHeight() {
-        return canvas.height;
-    }
-
     let api = {
         clear: clear,
         drawTexture: drawTexture,
         drawSubTexture: drawSubTexture,
         drawRectangle: drawRectangle,
-        getCanvasWidth: getCanvasWidth,
-        getCanvasHeight: getCanvasHeight
+        get canvasWidth() { return canvas.width; },
+        get canvasHeight() { return canvas.height; }
     };
 
     return api;
