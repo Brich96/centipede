@@ -117,6 +117,13 @@ MyGame.screens['game-play'] = (function(game, input, renderer, objects, graphics
         spriteTime: [25, 25, 25, 25, 25, 25, 25, 25],   // ms per frame
     }, graphics);
 
+    // Mushroom ----------------------------------------------
+    let mushroomRender = renderer.AnimatedModel({
+        spriteSheet: 'sprites/mush1.png',
+        spriteCount: 1,
+        spriteTime: [25],   // ms per frame
+    }, graphics);
+
     // UPDATE STUFF ----------------------------------------------
     let holdCenterY = 0;
 
