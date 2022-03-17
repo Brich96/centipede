@@ -22,7 +22,9 @@ MyGame.screens['game-play'] = (function(game, input, renderer, objects, graphics
     }
 
     function run() {
-        if(settings.length == 5) {
+        settings = JSON.parse(window.localStorage.getItem('settings'));
+        console.log(settings);
+        if(settings.length != null) {
         myKeyboard.register(settings[0], shooter.moveUp);
         myKeyboard.register(settings[1], shooter.moveDown);
         myKeyboard.register(settings[2], shooter.moveLeft);
