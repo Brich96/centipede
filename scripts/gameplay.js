@@ -22,18 +22,20 @@ MyGame.screens['game-play'] = (function(game, input, renderer, objects, graphics
     }
 
     function run() {
+        if(settings.length == 5) {
         myKeyboard.register(settings[0], shooter.moveUp);
         myKeyboard.register(settings[1], shooter.moveDown);
         myKeyboard.register(settings[2], shooter.moveLeft);
         myKeyboard.register(settings[3], shooter.moveRight);
         myKeyboard.register(settings[4], makeBolt);
+        }
 
         let centipedeHead = objects.Centipede({
             type: 1,
             direction: 'Left',
             oldDirection: '',
             size: { x: 18, y: 16, },       // Size in pixels
-            center: { x: graphics.canvasWidth / 2, y: 200 },
+            center: { x: graphics.canvasWidth + 10, y: 16 },
             rotation: 0,
             moveRate: 1500 / 1000,         // Pixels per second
             rotateRate: Math.PI / 1000    // Radians per second
@@ -46,7 +48,7 @@ MyGame.screens['game-play'] = (function(game, input, renderer, objects, graphics
                 direction: 'Left',
                 oldDirection: '',
                 size: { x: 18, y: 16, },       // Size in pixels
-                center: { x: (graphics.canvasWidth / 2) + (15 * i), y: 200 },
+                center: { x: (graphics.canvasWidth + 10) + (15 * i), y: 16 },
                 rotation: 0,
                 moveRate: 1500 / 1000,         // Pixels per second
                 rotateRate: Math.PI / 1000    // Radians per second
@@ -54,6 +56,18 @@ MyGame.screens['game-play'] = (function(game, input, renderer, objects, graphics
             centipedeBody.push(centipede);
         }
 
+        while (mushroomList.length < 20) { // Stop only if 20 squares is added
+            // var randomIndex = parseInt(20 * Math.random());
+            let randomX = (parseInt(32 * Math.random()) * 16) + 8
+            let randomY = (parseInt(32 * Math.random()) * 16) + 8
+
+            let mush = objects.Mushroom({
+                size: { x: 16, y: 16, },       // Size in pixels
+                center: { x: randomX, y: randomY },
+                state: 0
+            });
+            mushroomList.push(mush);
+          }
         cancelNextRequest = false;
         requestAnimationFrame(gameLoop);
     }
@@ -80,6 +94,7 @@ MyGame.screens['game-play'] = (function(game, input, renderer, objects, graphics
 
     let bullets = [];
     let centipedeBody = []
+    let mushroomList = []
     // Bullet
     let boltRender = renderer.AnimatedModel({
         spriteSheet: 'sprites/bolt.png',
@@ -93,8 +108,8 @@ MyGame.screens['game-play'] = (function(game, input, renderer, objects, graphics
         size: { x: 32, y: 16, },       // Size in pixels
         center: { x: 250, y: 250 },
         rotation: 0,
-        fireRate: 150,
-        moveRate: 350 / 1000,         // Pixels per second
+        fireRate: 250,
+        moveRate: 200 / 1000,         // Pixels per second
         rotateRate: Math.PI / 1000    // Radians per second
     });
  
@@ -118,8 +133,8 @@ MyGame.screens['game-play'] = (function(game, input, renderer, objects, graphics
     }, graphics);
 
     // Mushroom ----------------------------------------------
-    let mushroomRender = renderer.AnimatedModel({
-        spriteSheet: 'sprites/mush1.png',
+    let mushroomRender = renderer.AnimatedModelStatic({
+        spriteSheet: ['sprites/mush1.png', 'sprites/mush2.png', 'sprites/mush3.png', 'sprites/mush4.png'],
         spriteCount: 1,
         spriteTime: [25],   // ms per frame
     }, graphics);
@@ -133,6 +148,7 @@ MyGame.screens['game-play'] = (function(game, input, renderer, objects, graphics
         centipedeBodyRender.update(elapsedTime);
 
         updateCentipede();
+        updateBulletToMushroomCollision();
 
         timeSinceLastFire += elapsedTime;
 
@@ -143,6 +159,35 @@ MyGame.screens['game-play'] = (function(game, input, renderer, objects, graphics
                 bullets[i].moveUp(elapsedTime);
             }
         }
+    }
+
+    function updateBulletToMushroomCollision() {
+        for (let i = 0; i < mushroomList.length; i++) {
+            for (let j = 0; j < bullets.length; j++) {
+                if (checkForCollision(mushroomList[i], bullets[j])) {
+                    if(mushroomList[i].state == 3) {
+                        mushroomList.splice(i, 1);
+                        bullets.splice(j, 1);
+                        break;
+                    } else {
+                        mushroomList[i].state += 1;
+                        bullets.splice(j, 1);
+                        break;
+                    }
+                }
+            }
+        }
+    }    
+
+    function checkForCollision(object1, object2) {
+        let object1X = object1.center.x - object1.size.x / 2;
+        let object1Y = object1.center.y - object1.size.y / 2;
+        let object2X = object2.center.x - object2.size.x / 2;
+        let object2Y = object2.center.y - object2.size.y / 2;
+        return (object1X <= object2X + object2.size.x &&
+                object1X + object1.size.x >= object2X &&
+                object1Y <= object2Y + object2.size.y &&
+                object1Y + object1.size.y >= object2Y)
     }
 
     function updateCentipede() {
@@ -192,6 +237,10 @@ MyGame.screens['game-play'] = (function(game, input, renderer, objects, graphics
             } else {
                 centipedeBodyRender.render(centipedeBody[i]);
             }
+        }
+
+        for (let mushIndex = 0; mushIndex < mushroomList.length; mushIndex++) {
+            mushroomRender.render(mushroomList[mushIndex]);
         }
 
         for (let i = 0; i < bullets.length; i++) {

@@ -38,6 +38,7 @@ MyGame.objects.Centipede = function(spec) {
         get size() { return spec.size; },
         get center() { return spec.center; },
         get rotation() { return spec.rotation; },
+        set rotation(value) { spec.rotation = value; },
         get fireRate() { return spec.fireRate; },
         get type() { return spec.type; },
         get direction() { return spec.direction; },
