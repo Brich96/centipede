@@ -36,6 +36,7 @@
             <div class="text-center">
                 <canvas id="canvas" width="512" height="512" style="background-color: rgb(0, 0, 0);"></canvas>
             </div>
+            <div id="score-id" class="text-center"></div>
             <div id="canvas-game-div" class="text-center">
             </div>
         </div>
@@ -84,8 +85,13 @@
         objects: {},
         render: [],
         settings: [],
-        scores: []
     };
+
+    if(localStorage.getItem("scores") !== null) {
+        MyGame.score = JSON.parse(window.localStorage.getItem('settings'));
+    } else {
+        MyGame.score = [];
+    }
 </script>
 <!-- JavaScript Bundle with Popper -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>

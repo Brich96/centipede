@@ -1,4 +1,4 @@
-MyGame.screens['game-play'] = (function(game, input, renderer, objects, graphics, settings) {
+MyGame.screens['game-play'] = (function(game, input, renderer, objects, graphics, settings, scoreList) {
     'use strict';
 
     let myKeyboard = input.Keyboard();
@@ -9,6 +9,7 @@ MyGame.screens['game-play'] = (function(game, input, renderer, objects, graphics
 
     function initialize() {
         myKeyboard.register('Escape', function() {
+            console.log('Escape key pressed');
             cancelNextRequest = true;
             game.showScreen('main-menu');
         });
@@ -31,6 +32,8 @@ MyGame.screens['game-play'] = (function(game, input, renderer, objects, graphics
         myKeyboard.register(settings[4], makeBolt);
         }
 
+        highScore = 0;
+
         bullets = [];
         centipedeBody = []
         // mushroomList = []
@@ -38,12 +41,12 @@ MyGame.screens['game-play'] = (function(game, input, renderer, objects, graphics
         let centipedeHead = objects.Centipede({
             type: 1,
             direction: 'Left',
-            oldDirection: '',
+            oldDirection: 'Right',
             size: { x: 16, y: 16, },       // Size in pixels
-            center: { x: graphics.canvasWidth + 10, y: 16 },
+            center: { x: graphics.canvasWidth + 10, y: 8 },
             rotation: 0,
             moveRate: 1500 / 1000,         // Pixels per second
-            rotateRate: Math.PI / 1000    // Radians per second
+            rotateRate: Math.PI / 1000,
         });
         centipedeBody.push(centipedeHead);
 
@@ -51,12 +54,12 @@ MyGame.screens['game-play'] = (function(game, input, renderer, objects, graphics
             let centipede = objects.Centipede({
                 type: 0,
                 direction: 'Left',
-                oldDirection: '',
+                oldDirection: 'Right',
                 size: { x: 16, y: 16, },       // Size in pixels
-                center: { x: (graphics.canvasWidth + 10) + (15 * i), y: 16 },
+                center: { x: (graphics.canvasWidth + 10) + (15 * i), y: 8 },
                 rotation: 0,
                 moveRate: 1500 / 1000,         // Pixels per second
-                rotateRate: Math.PI / 1000    // Radians per second
+                rotateRate: Math.PI / 1000,
             });
             centipedeBody.push(centipede);
         }
@@ -96,7 +99,7 @@ MyGame.screens['game-play'] = (function(game, input, renderer, objects, graphics
     }
 
     // GAME LOOP STUFF ----------------------
-
+    let highScore = 0;
     let bullets = [];
     let centipedeBody = []
     let mushroomList = []
@@ -111,7 +114,7 @@ MyGame.screens['game-play'] = (function(game, input, renderer, objects, graphics
     // Shooter
     let shooter = objects.Shooter({
         size: { x: 32, y: 16, },       // Size in pixels
-        center: { x: 250, y: 250 },
+        center: { x: 250, y: 400 },
         rotation: 0,
         fireRate: 250,
         moveRate: 200 / 1000,         // Pixels per second
@@ -149,6 +152,7 @@ MyGame.screens['game-play'] = (function(game, input, renderer, objects, graphics
     let holdCenterY = 0;
 
     function update(elapsedTime) {
+        updateHighScore();
 
         shooterRender.update(elapsedTime);
         centipedeHeadRender.update(elapsedTime);
@@ -157,6 +161,7 @@ MyGame.screens['game-play'] = (function(game, input, renderer, objects, graphics
         updateCentipede();
         updateBulletToMushroomCollision();
         checkForPlayerCentipedeCollision();
+        checkForBulletCentipedeCollision();
 
         timeSinceLastFire += elapsedTime;
 
@@ -165,6 +170,32 @@ MyGame.screens['game-play'] = (function(game, input, renderer, objects, graphics
                 bullets.splice(i, 1);
             } else{
                 bullets[i].moveUp(elapsedTime);
+            }
+        }
+        if(centipedeBody.length <= 0) {
+            winGame();
+        }
+    }
+
+    function updateHighScore() {
+        document.getElementById('score-id').innerHTML = highScore;
+    }
+
+    function checkForBulletCentipedeCollision() {
+        for (let i = 0; i < bullets.length; i++) {
+            for (let j = 0; j < centipedeBody.length; j++) {
+                if(bullets[i].center.x >= centipedeBody[j].center.x - 8 && bullets[i].center.x <= centipedeBody[j].center.x + 8 && bullets[i].center.y >= centipedeBody[j].center.y - 8 && bullets[i].center.y <= centipedeBody[j].center.y + 8) {
+                    let mush = objects.Mushroom({
+                        size: { x: 16, y: 16, },       // Size in pixels
+                        center: { x: centipedeBody[i].center.x, y: centipedeBody[i].center.y },
+                        state: 0
+                    });
+                    highScore += 10;
+                    mushroomList.push(mush);
+                    bullets.splice(i, 1);
+                    centipedeBody.splice(j, 1);
+                    break;
+                }
             }
         }
     }
@@ -180,12 +211,66 @@ MyGame.screens['game-play'] = (function(game, input, renderer, objects, graphics
     function endGame() {
         cancelNextRequest = true;
         document.getElementById('canvas-game-div').innerHTML = "<h1>GAME OVER!</h1>";
+
+        let highScoreDiv = document.createElement('score-id');
+        highScoreDiv.innerHTML = `<h2>High Score: ${highScore}</h2>`;
+        highScoreDiv.append('<input id="name-input"></input>')
+        highScoreDiv.append('<button id="submit-button">Submit</button>')
+        document.getElementById('submit-button').addEventListener('click', function() {
+            let name = document.getElementById('name-input').value;
+            let score = highScore;
+            let newScore = {
+                name: name,
+                score: score
+            }
+            score.push(newScore);
+            window.localStorage.setItem('scores', JSON.stringify(scoreList));
+            console.log("saved");
+            console.log(scoreList);
+            console.log(window.localStorage.getItem('scores'));
+
+            game.showScreen('main-menu');
+        });
+
+    }
+
+    function winGame() {
+        cancelNextRequest = true;
+        document.getElementById('canvas-game-div').innerHTML = "<h1>YOU WIN!</h1>";
+
+        let highScoreDiv = document.getElementById('score-id');
+        highScoreDiv.innerHTML = `<h2>High Score: ${highScore}</h2>`;
+
+        let name_input = document.createElement('INPUT');
+        name_input.setAttribute('type', 'text');
+        name_input.setAttribute('id', 'name-input');
+        name_input.setAttribute('placeholder', 'Enter your name');
+        document.getElementById('score-id').appendChild(name_input);
+
+        let btn = document.createElement('button');
+        btn.setAttribute('id', 'submit-button');
+        btn.innerHTML = 'Save';
+        document.getElementById('score-id').appendChild(btn);
+
+        document.getElementById('submit-button').addEventListener('click', function() {
+            let name = document.getElementById('name-input').value;
+            let score = highScore;
+            let newScore = {
+                name: name,
+                score: score
+            }
+            scoreList.push(newScore);
+            window.localStorage.setItem('scores', JSON.stringify(scoreList));
+
+            game.showScreen('main-menu');
+        });
     }
 
     function updateBulletToMushroomCollision() {
         for (let i = 0; i < mushroomList.length; i++) {
             for (let j = 0; j < bullets.length; j++) {
                 if (checkForCollision(mushroomList[i], bullets[j])) {
+                    highScore += 5;
                     if(mushroomList[i].state == 3) {
                         mushroomList.splice(i, 1);
                         bullets.splice(j, 1);
@@ -211,37 +296,39 @@ MyGame.screens['game-play'] = (function(game, input, renderer, objects, graphics
                 object1Y + object1.size.y >= object2Y)
     }
 
-    function checkCentipedeMushroomCollision(currentCentipede) {
-        for (let j = 0; j < mushroomList.length; j++) {
-            if (checkForCollision(currentCentipede, mushroomList[j])) {
+    function checkForMushroomCentipedeCollision(centipede) {
+        for (let i = 0; i < mushroomList.length; i++) {
+            if (checkForCollision(centipede, mushroomList[i])) {
+                console.log("collision");
                 return true;
+            } else {
+                return false;
             }
         }
-        return false;
     }
 
     function updateCentipede() {
         for (let i = 0; i < centipedeBody.length; i++) {
             if(centipedeBody[i].direction == 'Left') { 
-                if(centipedeBody[i].center.x < 15) { // Needs to be updated to hitting anything, not just canvas walls
+                centipedeBody[i].moveLeft();
+                if(centipedeBody[i].center.x < 15 || checkForMushroomCentipedeCollision(centipedeBody[i])) {
+                    centipedeBody[i].moveRight();
                     centipedeBody[i].oldDirection = 'Left';
                     centipedeBody[i].direction = 'Down';
                     holdCenterY = centipedeBody[i].center.y;
-                } else {
-                    centipedeBody[i].moveLeft();
                 }
             } else if(centipedeBody[i].direction == 'Right') {
-                if(centipedeBody[i].center.x > graphics.canvasWidth - 15) {  // Needs to be updated to hitting anything, not just canvas walls
+                centipedeBody[i].moveRight();
+                if(centipedeBody[i].center.x > graphics.canvasWidth - 15 || checkForMushroomCentipedeCollision(centipedeBody[i])) {
+                    centipedeBody[i].moveLeft();
                     centipedeBody[i].oldDirection = 'Right';
                     centipedeBody[i].direction = 'Down';
                     holdCenterY = centipedeBody[i].center.y;
-                } else {
-                    centipedeBody[i].moveRight();
                 }
             } else if (centipedeBody[i].direction == 'Up') {
                 centipedeBody[i].moveUp();
             } else if (centipedeBody[i].direction == 'Down') {
-                if(Math.abs(holdCenterY - centipedeBody[i].center.y) > 17) {
+                if(Math.abs(holdCenterY - centipedeBody[i].center.y) > 16) {
                     if(centipedeBody[i].oldDirection == 'Left') {
                         centipedeBody[i].direction = 'Right';
                     } else if(centipedeBody[i].oldDirection == 'Right') {
@@ -298,4 +385,4 @@ MyGame.screens['game-play'] = (function(game, input, renderer, objects, graphics
         run: run
     }
 
-}(MyGame.game, MyGame.input, MyGame.render, MyGame.objects, MyGame.graphics, MyGame.settings));
+}(MyGame.game, MyGame.input, MyGame.render, MyGame.objects, MyGame.graphics, MyGame.settings, MyGame.score));

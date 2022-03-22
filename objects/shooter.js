@@ -42,6 +42,9 @@ MyGame.objects.Shooter = function(spec) {
     // }
 
     function checkForShooterMushroomCollision() {
+        if(spec.center.y < 300 || spec.center.y > 500 || spec.center.x < 0 || spec.center.x > 500) {
+            return true;
+        }
         for (let i = 0; i < spec.mushrooms.length; i++) {
             if(checkForCollision(spec, spec.mushrooms[i])) {
                 return true;
