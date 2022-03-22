@@ -5,6 +5,10 @@ MyGame.screens['main-menu'] = (function(game) {
             game.showScreen('game-play');
         });
 
+        document.getElementById('id-highscores').addEventListener('click', function() {
+            game.showScreen('highscores');
+        });
+
         document.getElementById('id-about').addEventListener('click', function() {
             game.showScreen('about');
         });

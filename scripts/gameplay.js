@@ -32,6 +32,10 @@ MyGame.screens['game-play'] = (function(game, input, renderer, objects, graphics
         myKeyboard.register(settings[4], makeBolt);
         }
 
+        if(localStorage.getItem("scores") !== null) {
+            MyGame.score = JSON.parse(window.localStorage.getItem('settings'));
+        }
+
         highScore = 0;
 
         bullets = [];
