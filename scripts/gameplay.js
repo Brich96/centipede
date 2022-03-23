@@ -7,8 +7,14 @@ MyGame.screens['game-play'] = (function(game, input, renderer, objects, graphics
     let cancelNextRequest = true;
     let timeSinceLastFire = 10000;
 
+    var backgroundMusic = new Audio('music/never.mp3');
+    backgroundMusic.loop = true;
+    backgroundMusic.volume = 0.03;
+
+
     function initialize() {
         myKeyboard.register('Escape', function() {
+            backgroundMusic.pause();
             cancelNextRequest = true;
             game.showScreen('main-menu');
         });
@@ -22,6 +28,9 @@ MyGame.screens['game-play'] = (function(game, input, renderer, objects, graphics
     }
 
     function run() {
+
+        backgroundMusic.play();
+
         settings = JSON.parse(window.localStorage.getItem('settings'));
         if(settings != null) {
         myKeyboard.register(settings[0], shooter.moveUp);
@@ -96,6 +105,9 @@ MyGame.screens['game-play'] = (function(game, input, renderer, objects, graphics
             });
             bullets.push(bolt);
             timeSinceLastFire = 0;
+            let blasterSound = new Audio('music/blaster.wav');
+            blasterSound.loop = false;
+            blasterSound.play();
         }
     }
 
@@ -118,14 +130,29 @@ MyGame.screens['game-play'] = (function(game, input, renderer, objects, graphics
     // Flea ---------------------------------
     let flea = objects.Flea({
         size: { x: 24, y: 16, },       // Size in pixels
-        center: { x: 50, y: -20 },
+        center: { x: 50, y: 520 },
         moveRate: 200 / 1000,
-        spawnRate: 20000,
+        spawnRate: 10000,
         canSpawn: false,
     });
 
     let fleaRender = renderer.AnimatedModel({
         spriteSheet: 'sprites/flea.png',
+        spriteCount: 4,
+        spriteTime: [200, 200, 200, 200],   // ms per frame
+    }, graphics);
+
+    // Scorpion ---------------------------------
+    let scorpion = objects.Scorpion({
+        size: { x: 24, y: 16, },       // Size in pixels
+        center: { x: 520, y: 50},
+        moveRate: 150 / 1000,
+        spawnRate: 15000,
+        canSpawn: false,
+    });
+
+    let scorpionRender = renderer.AnimatedModel({
+        spriteSheet: 'sprites/scorpion.png',
         spriteCount: 4,
         spriteTime: [200, 200, 200, 200],   // ms per frame
     }, graphics);
@@ -170,6 +197,7 @@ MyGame.screens['game-play'] = (function(game, input, renderer, objects, graphics
     // UPDATE STUFF ----------------------------------------------
     let holdCenterY = 0;
     let fleaTimer = 0;
+    let scorpionTimer = 0;
     function update(elapsedTime) {
         updateHighScore();
 
@@ -177,6 +205,16 @@ MyGame.screens['game-play'] = (function(game, input, renderer, objects, graphics
         centipedeHeadRender.update(elapsedTime);
         centipedeBodyRender.update(elapsedTime);
         fleaRender.update(elapsedTime);
+        scorpionRender.update(elapsedTime);
+
+        scorpionTimer += elapsedTime;
+        if (scorpionTimer > scorpion.spawnRate) {
+            scorpionTimer = 0;
+            let randomY = (parseInt(32 * Math.random()) * 16) + 8
+            scorpion.center.x = -20
+            scorpion.center.y = randomY;
+        }
+        scorpion.moveRight(elapsedTime);
 
         fleaTimer += elapsedTime;
         if (fleaTimer > flea.spawnRate) {
@@ -223,6 +261,9 @@ MyGame.screens['game-play'] = (function(game, input, renderer, objects, graphics
                     highScore += 10;
                     centipedeBody.splice(i, 1);
                     bullets.splice(j, 1);
+                    var centipedeHitSound = new Audio('music/boom_pack/boom9.wav');
+                    centipedeHitSound.loop = false;
+                    centipedeHitSound.play();
                     return 0;
                 }
             }
@@ -232,6 +273,9 @@ MyGame.screens['game-play'] = (function(game, input, renderer, objects, graphics
     function checkForPlayerCentipedeCollision() {
         for (let i = 0; i < centipedeBody.length; i++) {
             if (checkForCollision(shooter, centipedeBody[i])) {
+                var playerDieMusic = new Audio('music/boom_pack/boom1.wav');
+                playerDieMusic.loop = false;
+                playerDieMusic.play();
                 endGame();
             }
         }
@@ -239,12 +283,22 @@ MyGame.screens['game-play'] = (function(game, input, renderer, objects, graphics
 
     function endGame() {
         cancelNextRequest = true;
-        document.getElementById('canvas-game-div').innerHTML = "<h1>GAME OVER!</h1>";
+        document.getElementById('canvas-game-div').innerHTML = "<h1>YOU LOSE!</h1>";
 
-        let highScoreDiv = document.createElement('score-id');
+        let highScoreDiv = document.getElementById('score-id');
         highScoreDiv.innerHTML = `<h2>High Score: ${highScore}</h2>`;
-        highScoreDiv.append('<input id="name-input"></input>')
-        highScoreDiv.append('<button id="submit-button">Submit</button>')
+
+        let name_input = document.createElement('INPUT');
+        name_input.setAttribute('type', 'text');
+        name_input.setAttribute('id', 'name-input');
+        name_input.setAttribute('placeholder', 'Enter your name');
+        document.getElementById('score-id').appendChild(name_input);
+
+        let btn = document.createElement('button');
+        btn.setAttribute('id', 'submit-button');
+        btn.innerHTML = 'Save';
+        document.getElementById('score-id').appendChild(btn);
+
         document.getElementById('submit-button').addEventListener('click', function() {
             let name = document.getElementById('name-input').value;
             let score = highScore;
@@ -252,12 +306,9 @@ MyGame.screens['game-play'] = (function(game, input, renderer, objects, graphics
                 name: name,
                 score: score
             }
-            score.push(newScore);
+            scoreList.push(newScore);
             window.localStorage.setItem('scores', JSON.stringify(scoreList));
-            console.log("saved");
-            console.log(scoreList);
-            console.log(window.localStorage.getItem('scores'));
-
+            backgroundMusic.pause();
             game.showScreen('main-menu');
         });
 
@@ -290,7 +341,7 @@ MyGame.screens['game-play'] = (function(game, input, renderer, objects, graphics
             }
             scoreList.push(newScore);
             window.localStorage.setItem('scores', JSON.stringify(scoreList));
-
+            backgroundMusic.pause();
             game.showScreen('main-menu');
         });
     }
@@ -303,10 +354,16 @@ MyGame.screens['game-play'] = (function(game, input, renderer, objects, graphics
                     if(mushroomList[i].state == 3) {
                         mushroomList.splice(i, 1);
                         bullets.splice(j, 1);
+                        let mushroomHitSound = new Audio('music/boom_pack/boom5.wav');
+                        mushroomHitSound.loop = false;
+                        mushroomHitSound.play();
                         break;
                     } else {
                         mushroomList[i].state += 1;
                         bullets.splice(j, 1);
+                        let mushroomHitSound = new Audio('music/boom_pack/boom5.wav');
+                        mushroomHitSound.loop = false;
+                        mushroomHitSound.play();
                         break;
                     }
                 }
@@ -375,6 +432,7 @@ MyGame.screens['game-play'] = (function(game, input, renderer, objects, graphics
         shooterRender.render(shooter);
 
         fleaRender.render(flea);
+        scorpionRender.render(scorpion);
 
         for (let i = 0; i < centipedeBody.length; i++) {
             if(centipedeBody[i].type == 1) {
