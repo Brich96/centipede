@@ -9,7 +9,6 @@ MyGame.screens['game-play'] = (function(game, input, renderer, objects, graphics
 
     function initialize() {
         myKeyboard.register('Escape', function() {
-            console.log('Escape key pressed');
             cancelNextRequest = true;
             game.showScreen('main-menu');
         });
@@ -40,7 +39,8 @@ MyGame.screens['game-play'] = (function(game, input, renderer, objects, graphics
 
         bullets = [];
         centipedeBody = []
-        // mushroomList = []
+        mushroomList = []
+        shooter.mushrooms = mushroomList;
 
         let centipedeHead = objects.Centipede({
             type: 1,
@@ -80,6 +80,7 @@ MyGame.screens['game-play'] = (function(game, input, renderer, objects, graphics
             });
             mushroomList.push(mush);
           }
+          console.log(mushroomList);
         cancelNextRequest = false;
         requestAnimationFrame(gameLoop);
     }
@@ -114,6 +115,20 @@ MyGame.screens['game-play'] = (function(game, input, renderer, objects, graphics
         spriteTime: [25],   // ms per frame
     }, graphics);
 
+    // Flea ---------------------------------
+    let flea = objects.Flea({
+        size: { x: 24, y: 16, },       // Size in pixels
+        center: { x: 50, y: -20 },
+        moveRate: 200 / 1000,
+        spawnRate: 20000,
+        canSpawn: false,
+    });
+
+    let fleaRender = renderer.AnimatedModel({
+        spriteSheet: 'sprites/flea.png',
+        spriteCount: 4,
+        spriteTime: [200, 200, 200, 200],   // ms per frame
+    }, graphics);
 
     // Shooter
     let shooter = objects.Shooter({
@@ -154,13 +169,23 @@ MyGame.screens['game-play'] = (function(game, input, renderer, objects, graphics
 
     // UPDATE STUFF ----------------------------------------------
     let holdCenterY = 0;
-
+    let fleaTimer = 0;
     function update(elapsedTime) {
         updateHighScore();
 
         shooterRender.update(elapsedTime);
         centipedeHeadRender.update(elapsedTime);
         centipedeBodyRender.update(elapsedTime);
+        fleaRender.update(elapsedTime);
+
+        fleaTimer += elapsedTime;
+        if (fleaTimer > flea.spawnRate) {
+            fleaTimer = 0;
+            let randomX = (parseInt(32 * Math.random()) * 16) + 8
+            flea.center.y = -20;
+            flea.center.x = randomX;
+        }
+        flea.moveDown(elapsedTime);
 
         updateCentipede();
         updateBulletToMushroomCollision();
@@ -186,19 +211,19 @@ MyGame.screens['game-play'] = (function(game, input, renderer, objects, graphics
     }
 
     function checkForBulletCentipedeCollision() {
-        for (let i = 0; i < bullets.length; i++) {
-            for (let j = 0; j < centipedeBody.length; j++) {
-                if(bullets[i].center.x >= centipedeBody[j].center.x - 8 && bullets[i].center.x <= centipedeBody[j].center.x + 8 && bullets[i].center.y >= centipedeBody[j].center.y - 8 && bullets[i].center.y <= centipedeBody[j].center.y + 8) {
+        for (let i = 0; i < centipedeBody.length; i++) {
+            for (let j = 0; j < bullets.length ; j++) {
+                if(checkForCollision(centipedeBody[i], bullets[j])) {
                     let mush = objects.Mushroom({
                         size: { x: 16, y: 16, },       // Size in pixels
                         center: { x: centipedeBody[i].center.x, y: centipedeBody[i].center.y },
                         state: 0
                     });
-                    highScore += 10;
                     mushroomList.push(mush);
-                    bullets.splice(i, 1);
-                    centipedeBody.splice(j, 1);
-                    break;
+                    highScore += 10;
+                    centipedeBody.splice(i, 1);
+                    bullets.splice(j, 1);
+                    return 0;
                 }
             }
         }
@@ -303,17 +328,14 @@ MyGame.screens['game-play'] = (function(game, input, renderer, objects, graphics
     function checkForMushroomCentipedeCollision(centipede) {
         for (let i = 0; i < mushroomList.length; i++) {
             if (checkForCollision(centipede, mushroomList[i])) {
-                console.log("collision");
                 return true;
-            } else {
-                return false;
             }
         }
     }
 
     function updateCentipede() {
         for (let i = 0; i < centipedeBody.length; i++) {
-            if(centipedeBody[i].direction == 'Left') { 
+            if(centipedeBody[i].direction == 'Left') {  
                 centipedeBody[i].moveLeft();
                 if(centipedeBody[i].center.x < 15 || checkForMushroomCentipedeCollision(centipedeBody[i])) {
                     centipedeBody[i].moveRight();
@@ -351,6 +373,8 @@ MyGame.screens['game-play'] = (function(game, input, renderer, objects, graphics
         graphics.clear();
 
         shooterRender.render(shooter);
+
+        fleaRender.render(flea);
 
         for (let i = 0; i < centipedeBody.length; i++) {
             if(centipedeBody[i].type == 1) {
